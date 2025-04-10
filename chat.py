@@ -6,9 +6,11 @@ import os
 from functools import lru_cache
 import requests
 import json
+from flask_cors import CORS
 
 app = Flask(__name__)
 model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+CORS(app)
 
 @lru_cache(maxsize=1000)
 def get_cached_embedding(text):
@@ -73,22 +75,19 @@ def ask():
                 best_match = item
                 max_similarity = similarity
 
-        # پاسخ اولیه (از دیتاست یا خالی)
         raw_answer = best_match["answer"] if best_match and max_similarity > 0.5 else ""
 
-        # ساخت prompt اختصاصی برای API خارجی
         final_prompt = (
             f"متن:\n{raw_answer}\n\n"
             f"سؤال: {user_input}\n\n"
-            f"لطفاً به زبان فارسی پاسخ بده:\n"
-            f"پاسخ را فقط به زبان فارسی بده و از هیچ کلمه انگلیسی استفاده نکن.\n"
-            f"اگر سوال به متن بالا مرتبط نبود، بگو 'اطلاعاتی ندارم'.\n"
-            f"اگر از کلاهبرداری بودن پرسید، بگو 'خیر، شرکت هومینگر به شما این تضمین را می‌دهد که این کار کلاهبرداری نیست'.\n"
-            f"اگر پرسید این کار سودآور است یا نه، بگو 'بله، این کار سودآور است'.\n"
-            f"لطفاً جواب را به صورت مختصر و واضح بده."
+            f"پاسخ را فقط به زبان فارسی و بدون استفاده از هیچ کلمه انگلیسی بنویس.\n"
+            f"از عبارت‌هایی مثل end_of_text یا تگ‌ها استفاده نکن.\n"
+            f"پاسخ باید روان، کامل، قابل فهم و کوتاه باشد.\n"
+            f"اگر سوال نامربوط بود، فقط بنویس 'اطلاعاتی ندارم'.\n"
+            f"اگر از کلاهبرداری بودن پرسید، بگو 'خیر، شرکت هومینگر تضمین می‌دهد این کار کلاهبرداری نیست'.\n"
+            f"اگر پرسید آیا این کار سودآور است، بگو 'بله، این کار سودآور است'."
         )
 
-        # ارسال به API خارجی
         api_url = "http://46.167.136.122:11434/api/generate"
         data = {
             "model": "partai/dorna-llama3",
@@ -108,12 +107,15 @@ def ask():
                 except json.JSONDecodeError:
                     continue
 
+        # پاک‌سازی متن خروجی
+        clean_answer = response_text.replace("<|end_of_text|>", "").strip()
+
         return jsonify({
             "original_input": user_input,
             "answers": [{
                 "input": user_input,
                 "matched_question": best_match["question"] if best_match else "پاسخی یافت نشد",
-                "answer": response_text or 'پاسخ موجود نیست',
+                "answer": clean_answer or 'پاسخ موجود نیست',
                 "similarity": float(max_similarity)
             }]
         })
@@ -121,6 +123,7 @@ def ask():
     except Exception as e:
         print("❌ خطا:", e)
         return jsonify({"error": "خطای داخلی سرور", "details": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
