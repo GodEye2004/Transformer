@@ -4,9 +4,10 @@ from flask import Flask, request, jsonify
 from sentence_transformers import SentenceTransformer
 import os
 from functools import lru_cache
-
+from flask_cors import CORS  
 app = Flask(__name__)
 model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+CORS(app)
 
 
 @lru_cache(maxsize=1000)
