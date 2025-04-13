@@ -107,7 +107,7 @@ def ask():
                 except json.JSONDecodeError:
                     continue
 
-        # پاک‌سازی متن خروجی
+        
         clean_answer = response_text.replace("<|end_of_text|>", "").strip()
 
         return jsonify({
