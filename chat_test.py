@@ -2,7 +2,6 @@ import json
 import os
 import re
 from functools import lru_cache
-
 import numpy as np
 import requests
 from flask import Flask, jsonify, request
