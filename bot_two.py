@@ -1,21 +1,21 @@
-import os
-import re
+import asyncio
 import json
 import logging
-import torch
-import asyncio
+import os
+import re
 import uuid
+from asyncio import Semaphore
+from collections import deque
 from datetime import datetime
 from functools import lru_cache
+from typing import Deque, Dict, List, Optional
 import httpx
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
+import torch
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel
-from typing import Optional, Dict, List, Deque
 from sentence_transformers import SentenceTransformer, util
-from asyncio import Semaphore
-from collections import deque
 
 logging.basicConfig(level=logging.INFO)
 
@@ -476,4 +476,4 @@ async def shutdown_event():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("bot_test:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("bot_two:app", host="0.0.0.0", port=8000, reload=True)
